@@ -1,7 +1,7 @@
 import io
 from collections import defaultdict
-import configargparse as cap
 
+import configargparse as cap
 import tweepy
 from tqdm import tqdm
 import pandas as pd
