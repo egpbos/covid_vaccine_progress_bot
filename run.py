@@ -1,4 +1,3 @@
-import io
 from collections import defaultdict
 
 import configargparse as cap
@@ -60,8 +59,11 @@ data_filtered = data_filtered.set_index('iso_code')
 continent_totals = defaultdict(int)
 
 for iso_code, number in data_filtered.people_vaccinated.iteritems():
-    continent = continent_from_iso_country_code(iso_code)
-    continent_totals[continent] += number
+    try:
+        continent = continent_from_iso_country_code(iso_code)
+        continent_totals[continent] += number
+    except KeyError:
+        print("iso code", iso_code, "not a valid country code, skipping")
 
 
 total_pop = pd.read_csv('https://raw.githubusercontent.com/owid/covid-19-data/master/scripts/input/un/population_2020.csv')
