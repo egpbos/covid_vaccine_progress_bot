@@ -1,4 +1,5 @@
 from collections import defaultdict
+import datetime
 
 import configargparse as cap
 import tweepy
@@ -36,12 +37,15 @@ data_filtered = data_filtered[data_filtered.date == data_filtered.date.max()]
 # take last item in case dataset contains multiple items this day:
 percentage = data_filtered.iloc[-1].people_vaccinated_per_hundred
 
-bar = tqdm(initial=percentage, total=100., bar_format='|{bar:15}| {percentage:3.1f}%', ascii=False)
+# cycle world emojis each day:
+world_today = "🌎🌏🌍"[datetime.datetime.now().timetuple().tm_yday % 3]
+
+bar = tqdm(initial=percentage, total=100., bar_format='|{bar:12}| {percentage:3.1f}% ' + world_today, ascii=False)
 
 bar_string = bar.__str__()
 print("bar_string:\n", bar_string)
 bar.close()
-tweet_string = bar_string[:-5].replace(' ', '\u3000') + bar_string[-5:]
+tweet_string = bar_string[:-7].replace(' ', '\u3000') + bar_string[-7:] + '\n'
 
 # add continent bars
 
@@ -85,18 +89,20 @@ for continent, total in continent_totals.items():
     continent_percentages[continent] = total / total_pop_continents[continent] * 100
 
     bar = tqdm(initial=continent_percentages[continent],
-               total=100., bar_format='|{bar:12}| C: {percentage:3.1f}%',
+               total=100., bar_format='|{bar:12}| {percentage:3.1f}% C',
                ascii=False)
     bar_string = bar.__str__()
     bar.close()
-    tweet_string_add = bar_string[:-8].replace(' ', '\u3000') + bar_string[-8:] 
-    tweet_string_add = tweet_string_add.replace('C', continent)
+    tweet_string_add = bar_string[:-7].replace(' ', '\u3000') + bar_string[-7:]
+    short_continent = continent.replace('orth', '.').replace('outh', '.')
+    tweet_string_add = tweet_string_add.replace('C', short_continent)
     strings[continent] = tweet_string_add
     tweet_string = tweet_string + "\n" + tweet_string_add
 
 
 print("final string:")
 print(tweet_string)
+print("tweet length:", len(tweet_string))
 
 # and update on twitter
 api.update_status(tweet_string)
