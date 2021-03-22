@@ -40,12 +40,18 @@ percentage = data_filtered.iloc[-1].people_vaccinated_per_hundred
 # cycle world emojis each day:
 world_today = "🌎🌏🌍"[datetime.datetime.now().timetuple().tm_yday % 3]
 
-bar = tqdm(initial=percentage, total=100., bar_format='|{bar:12}| {percentage:3.1f}% ' + world_today, ascii=False)
 
-bar_string = bar.__str__()
-print("bar_string:\n", bar_string)
-bar.close()
-tweet_string = bar_string[:-7].replace(' ', '\u3000') + bar_string[-7:] + '\n'
+def tweet_bar_string_from_percentage(percentage, continent, bar_format='|{bar:12}| {percentage:.2g}% CONTINENT'):
+    bar = tqdm(initial=percentage, total=100., bar_format=bar_format, ascii=False)
+    bar_string = str(bar)
+    bar.close()
+    bar_separator_ix = bar_string.rfind('|')
+    tweet_string = bar_string[:bar_separator_ix].replace(' ', '\u3000') + bar_string[bar_separator_ix:]
+    tweet_string = tweet_string.replace('CONTINENT', continent)
+    return tweet_string
+
+
+tweet_string = tweet_bar_string_from_percentage(percentage, world_today) + '\n'
 
 # add continent bars
 
@@ -87,15 +93,8 @@ continent_percentages = {}
 strings = {}
 for continent, total in continent_totals.items():
     continent_percentages[continent] = total / total_pop_continents[continent] * 100
-
-    bar = tqdm(initial=continent_percentages[continent],
-               total=100., bar_format='|{bar:12}| {percentage:3.1f}% C',
-               ascii=False)
-    bar_string = bar.__str__()
-    bar.close()
-    tweet_string_add = bar_string[:-7].replace(' ', '\u3000') + bar_string[-7:]
     short_continent = continent.replace('orth', '.').replace('outh', '.')
-    tweet_string_add = tweet_string_add.replace('C', short_continent)
+    tweet_string_add = tweet_bar_string_from_percentage(continent_percentages[continent], short_continent)
     strings[continent] = tweet_string_add
     tweet_string = tweet_string + "\n" + tweet_string_add
 
